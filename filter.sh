@@ -70,6 +70,13 @@ echo 'Beginning filtering operation ...'
 
 for adir in "${ASSIGNMENT_DIRS[@]}"
 do
+    # Zip files of the submissions having same name but different extension may 
+    # be present. Ignore them and only process the directories.
+    if [ ! -d "$adir" ]
+    then
+        continue
+    fi
+    
     # This is where filtered code files would be copied
     target_dir="$SOLUTIONS_DIR/$adir"
     copy_dir="../$target_dir/"
@@ -114,6 +121,11 @@ echo 'Beginning source code compilation ...'
 # Now visit each directory, compile code, and generate the executables
 for adir in "${ASSIGNMENT_DIRS[@]}"
 do
+    if [ ! -d "$adir" ]
+    then
+        continue
+    fi
+    
     cd "$SOLUTIONS_DIR/$adir"
     echo 'Processing '"$SOLUTIONS_DIR/$adir"
     
