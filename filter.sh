@@ -34,37 +34,46 @@
 # @date 2016-08-19
 #
 
-# Names of students whose assignements are to be filtered out
+# Names of students whose assignements are to be filtered out. These must match
+# with the names as set in Moodle.
 NAMES=('Prateek Manikpuri' 'Thitthi Roja' 'Ayush Jaiswal' \
 'Pawan Kumar Kashyap' 'Amrita Biswas' 'Naman Agarwal' 'Viraj Patel' 
 'Amit Kumar' 'Debmalya Roy' 'Kailash Hudda' 'Mohit Kosuri' 'Shreyank Shukla' \
 'Akshay Telmasare' 'Hemanth P S')
+# Number of names, i.e., # of files to be segregated
 NENTRIES=${#NAMES[@]}
 
 # Name of the course as displayed in Moodle. Names of directories containing
 # assignments begin with this pattern.
 COURSE_LABEL='PDS Lab Section'
-# Directory where filtered out solutions would be created
+# Directory where filtered out solutions (submissions) would be created
 SOLUTIONS_DIR=solutions
 
 # Get a list of all working directories ans store them in an array
 ASSIGNMENT_DIRS=("$COURSE_LABEL"*)
-
-for adir in "${ASSIGNMENT_DIRS[@]}"
-do
-    echo "$adir"
-done
 
 if [ ! -d "$SOLUTIONS_DIR" ]
 then
     mkdir "$SOLUTIONS_DIR"
 fi
 
+# Remove the executables created earlier, if any. In a later step, gcc
+# would compile *all* files present in a directory and therefore, only source
+# code should be present there. The cleaning should be done before hand to
+# verify files count.
+echo 'Cleaning up pre-existing executables, if any ...'
+find "$SOLUTIONS_DIR" -type f -name "*.out" -delete
+
+
+echo ''
+echo 'Beginning filtering operation ...'
+
 for adir in "${ASSIGNMENT_DIRS[@]}"
 do
     # This is where filtered code files would be copied
     target_dir="$SOLUTIONS_DIR/$adir"
     copy_dir="../$target_dir/"
+    echo 'Processing directory '"$target_dir"
     
     if [ ! -d "$target_dir" ]
     then
@@ -92,8 +101,39 @@ do
     count=$(ls -afq "$target_dir" | wc -l)
     count=$(expr $count - 2)
     
-    if [[ $count -ne $NENTRIES ]]
+    if [[ $count -lt $NENTRIES ]]
     then
         echo "* ALERT: Found only $count (out of required $NENTRIES) files in $target_dir"
     fi
 done
+
+
+echo ''
+echo 'Beginning source code compilation ...'
+
+# Now visit each directory, compile code, and generate the executables
+for adir in "${ASSIGNMENT_DIRS[@]}"
+do
+    cd "$SOLUTIONS_DIR/$adir"
+    echo 'Processing '"$SOLUTIONS_DIR/$adir"
+    
+    find * -print0 | while read -d $'\0' fname
+    do
+        # gcc expects a .c extension. If someone has missed it, use "-x c" to
+        # signal gcc to treat the file as source code.
+        # Also, executables generated typically do not have any extension.
+        # However, since one might forget to add a .c extension to the
+        # source code, a .out extension is added to executables to safely 
+        # identify them.
+        gcc -lm -x c "$fname" -o "$fname".out
+        
+        if [[ $? -ne 0 ]]
+        then
+            echo '*** ERROR in compiling file: '"$SOLUTIONS_DIR/$adir/$fname"
+        fi
+    done
+    
+    cd ../..
+done
+
+echo 'Done!'
