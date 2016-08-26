@@ -49,6 +49,11 @@ COURSE_LABEL='PDS Lab Section'
 # Directory where filtered out solutions (submissions) would be created
 SOLUTIONS_DIR=solutions
 
+# Color codes for display
+RED='\033[0;31m'
+BROWN='\033[0;33m'
+NC='\033[0m'
+
 # Get a list of all working directories ans store them in an array
 ASSIGNMENT_DIRS=("$COURSE_LABEL"*)
 
@@ -70,8 +75,8 @@ echo 'Beginning filtering operation ...'
 
 for adir in "${ASSIGNMENT_DIRS[@]}"
 do
-    # Zip files of the submissions having same name but different extension may 
-    # be present. Ignore them and only process the directories.
+    # Zip files of the submissions may be present in the concerned directory.
+    # Ignore them and only process the directories.
     if [ ! -d "$adir" ]
     then
         continue
@@ -110,7 +115,7 @@ do
     
     if [[ $count -lt $NENTRIES ]]
     then
-        echo "* ALERT: Found only $count (out of required $NENTRIES) files in $target_dir"
+        echo -e "${BROWN}* ALERT: Found only $count (out of required $NENTRIES) files in $target_dir${NC}"
     fi
 done
 
@@ -141,7 +146,7 @@ do
         
         if [[ $? -ne 0 ]]
         then
-            echo '*** ERROR in compiling file: '"$SOLUTIONS_DIR/$adir/$fname"
+            echo -e ${RED}'*** ERROR in compiling file: '"$SOLUTIONS_DIR/$adir/$fname"${NC}
         fi
     done
     
