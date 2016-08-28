@@ -30,7 +30,6 @@
 # 
 
 # @author barun
-# @version 1
 # @date 2016-08-19
 #
 
@@ -142,7 +141,7 @@ do
         # However, since one might forget to add a .c extension to the
         # source code, a .out extension is added to executables to safely 
         # identify them.
-        gcc -lm -x c "$fname" -o "$fname".out
+        gcc -lm -x c "$fname" -o "$fname".out 2>/dev/null
         
         if [[ $? -ne 0 ]]
         then
