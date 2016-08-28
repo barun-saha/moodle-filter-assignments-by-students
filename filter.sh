@@ -46,8 +46,8 @@ NENTRIES=${#NAMES[@]}
 # Name of the course as displayed in Moodle. Names of directories containing
 # assignments begin with this pattern.
 COURSE_LABEL='PDS Lab Section'
-# Directory where filtered out solutions (submissions) would be created
-SOLUTIONS_DIR=solutions
+# Directory where filtered out submissions would be created
+SUBMISSIONS_DIR=submissions
 
 # Color codes for display
 RED='\033[0;31m'
@@ -57,9 +57,9 @@ NC='\033[0m'
 # Get a list of all working directories ans store them in an array
 ASSIGNMENT_DIRS=("$COURSE_LABEL"*)
 
-if [ ! -d "$SOLUTIONS_DIR" ]
+if [ ! -d "$SUBMISSIONS_DIR" ]
 then
-    mkdir "$SOLUTIONS_DIR"
+    mkdir "$SUBMISSIONS_DIR"
 fi
 
 # Remove the executables created earlier, if any. In a later step, gcc
@@ -67,7 +67,7 @@ fi
 # code should be present there. The cleaning should be done before hand to
 # verify files count.
 echo 'Cleaning up pre-existing executables, if any ...'
-find "$SOLUTIONS_DIR" -type f -name "*.out" -delete
+find "$SUBMISSIONS_DIR" -type f -name "*.out" -delete
 
 
 echo ''
@@ -83,7 +83,7 @@ do
     fi
     
     # This is where filtered code files would be copied
-    target_dir="$SOLUTIONS_DIR/$adir"
+    target_dir="$SUBMISSIONS_DIR/$adir"
     copy_dir="../$target_dir/"
     echo 'Processing directory '"$target_dir"
     
@@ -131,8 +131,8 @@ do
         continue
     fi
     
-    cd "$SOLUTIONS_DIR/$adir"
-    echo 'Processing '"$SOLUTIONS_DIR/$adir"
+    cd "$SUBMISSIONS_DIR/$adir"
+    echo 'Processing '"$SUBMISSIONS_DIR/$adir"
     
     find * -print0 | while read -d $'\0' fname
     do
@@ -146,7 +146,7 @@ do
         
         if [[ $? -ne 0 ]]
         then
-            echo -e ${RED}'*** ERROR in compiling file: '"$SOLUTIONS_DIR/$adir/$fname"${NC}
+            echo -e ${RED}'*** ERROR in compiling file: '"$SUBMISSIONS_DIR/$adir/$fname"${NC}
         fi
     done
     
