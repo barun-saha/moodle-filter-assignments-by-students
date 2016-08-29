@@ -1,19 +1,19 @@
 #!/bin/bash
 
 #
-# This script is intended to filter out assignements of selected students 
+# This script is intended to filter out assignements of selected students
 # identified by name from a bunch of files belonging to all the students in
 # a given course.
 #
-# This script is created for the PDS Lab, Section 9, IIT Kharagpur, but can be 
-# used for other purposes as well. Since roll # or any unique identifier is not
-# available with the files submitted, we need to filter them by names of 
-# students. Again since one can change display of name in Moodle, we need
-# to verify that this script filters out the desired number of files.
+# This script is originally created for the PDS Lab, Section 9, IIT Kharagpur,
+# but can be used for other purposes as well. Since roll # or any unique
+# identifier is not available with the files submitted, we need to filter them
+# by names of students. Again since one can change display of name in Moodle, we
+# need to verify that this script filters out the desired number of files.
 #
 # This script should be placed in a directory where the unzipped directories
 # containing the assignment files are located. The script should be executed
-# from the same directory. Filtered out codes would be moved to the solutions/
+# from the same directory. Filtered out codes would be moved to the submissions/
 # directory that would be created by this script.
 #
 # Sample directory structure before executing the script:
@@ -25,13 +25,31 @@
 # filter.sh
 # PDS Lab Section 9-Assignment 3a [Weekday]-2508/
 # PDS Lab Section 9-Assignment 3b [Elements in an Interval]-2510/
-# solutions/PDS Lab Section 9-Assignment 3a [Weekday]-2508/
-# solutions/PDS Lab Section 9-Assignment 3b [Elements in an Interval]-2510/
+# submissions/PDS Lab Section 9-Assignment 3a [Weekday]-2508/
+# submissions/PDS Lab Section 9-Assignment 3b [Elements in an Interval]-2510/
 # 
-
+#
 # @author barun
 # @date 2016-08-19
 #
+# Copyright 2016, Barun Saha, http://barunsaha.me
+# Distributed under GNU GPLv3 license. See the LICENSE file for details.
+#
+
+
+### Configuration variables ###
+
+# Set it to true if the submitted files are C programs and you want to compile
+# them. On successful compilation, an executable file with same name as the 
+# source file together with a .out extension will be generated. 
+# Set this variable to false if the submissions are not C programs or you
+# do not want to compile them.
+SHOULD_COMPILE=true
+# Set it to true if you want to display all warnings and errors generated
+# while compiling the programs. Useful to set it to false if you expect large
+# number of compilation errors.
+SHOULD_SHOW_COMPILATION_ERRORS=false
+
 
 # Names of students whose assignements are to be filtered out. These must match
 # with the names as set in Moodle.
@@ -119,37 +137,45 @@ do
 done
 
 
-echo ''
-echo 'Beginning source code compilation ...'
+if [ "$SHOULD_COMPILE" = true ]
+then
+    echo ''
+    echo 'Beginning source code compilation ...'
 
-# Now visit each directory, compile code, and generate the executables
-for adir in "${ASSIGNMENT_DIRS[@]}"
-do
-    if [ ! -d "$adir" ]
-    then
-        continue
-    fi
-    
-    cd "$SUBMISSIONS_DIR/$adir"
-    echo 'Processing '"$SUBMISSIONS_DIR/$adir"
-    
-    find * -print0 | while read -d $'\0' fname
+    # Now visit each directory, compile code, and generate the executables
+    for adir in "${ASSIGNMENT_DIRS[@]}"
     do
-        # gcc expects a .c extension. If someone has missed it, use "-x c" to
-        # signal gcc to treat the file as source code.
-        # Also, executables generated typically do not have any extension.
-        # However, since one might forget to add a .c extension to the
-        # source code, a .out extension is added to executables to safely 
-        # identify them.
-        gcc -lm -x c "$fname" -o "$fname".out 2>/dev/null
-        
-        if [[ $? -ne 0 ]]
+        if [ ! -d "$adir" ]
         then
-            echo -e ${RED}'*** ERROR in compiling file: '"$SUBMISSIONS_DIR/$adir/$fname"${NC}
+            continue
         fi
+        
+        cd "$SUBMISSIONS_DIR/$adir"
+        echo 'Processing '"$SUBMISSIONS_DIR/$adir"
+        
+        find * -print0 | while read -d $'\0' fname
+        do
+            # gcc expects a .c extension. If someone has missed it, use "-x c" to
+            # signal gcc to treat the file as source code.
+            # Also, executables generated typically do not have any extension.
+            # However, since one might forget to add a .c extension to the
+            # source code, a .out extension is added to executables to safely 
+            # identify them.
+            if [ "$SHOULD_SHOW_COMPILATION_ERRORS" = true ]
+            then
+                gcc -Wall -lm -x c "$fname" -o "$fname".out
+            else
+                gcc -Wall -lm -x c "$fname" -o "$fname".out 2>/dev/null
+            fi
+            
+            if [[ $? -ne 0 ]]
+            then
+                echo -e ${RED}'*** ERROR in compiling file: '"$SUBMISSIONS_DIR/$adir/$fname"${NC}
+            fi
+        done
+        
+        cd ../..
     done
-    
-    cd ../..
-done
+fi
 
 echo 'Done!'
